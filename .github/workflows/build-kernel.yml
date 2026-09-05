@@ -10,6 +10,9 @@ env:
   RPI_LINUX_BRANCH: rpi-6.18.y
   LOCALVERSION: -sata-boot
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
