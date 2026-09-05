@@ -32,21 +32,22 @@ jobs:
         run: |
           git clone --depth=1 --branch "${RPI_LINUX_BRANCH}" https://github.com/raspberrypi/linux.git
 
-      - name: Configura kernel
+      - name: Configure kernel
         working-directory: linux
         run: |
-          make bcm2712_defconfig
+          make LLVM=1 bcm2712_defconfig
           echo "CONFIG_LOCALVERSION=\"${LOCALVERSION}\"" >> .config
           ./scripts/config --enable CONFIG_ATA
           ./scripts/config --enable CONFIG_SATA_AHCI
-          make olddefconfig
+          make LLVM=1 olddefconfig
 
       - name: Build .deb
         working-directory: linux
         env:
           CCACHE_DIR: /home/runner/.ccache
         run: |
-          make CCACHE=1 -j"$(nproc)" Image modules dtbs bindeb-pkg
+          make CCACHE=1 LLVM=1 -j"$(nproc)" Image modules dtbs
+          make CCACHE=1 LLVM=1 -j"$(nproc)" bindeb-pkg
 
       - name: Prep apt repo
         run: |
