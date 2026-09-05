@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison flex libssl-dev make libc6-dev libncurses5-dev gcc-aarch64-linux-gnu libssl-dev dpkg-dev ccache crossbuild-essential-arm64
+          sudo apt-get install -y bc bison flex libssl-dev make libc6-dev libncurses5-dev gcc-aarch64-linux-gnu libssl-dev dpkg-dev ccache crossbuild-essential-arm64  build-essential debhelper-compat libdw-dev libelf-dev
 
       - name: Cache ccache
         uses: actions/cache@v6
