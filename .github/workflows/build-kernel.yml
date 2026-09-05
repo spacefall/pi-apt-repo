@@ -1,0 +1,65 @@
+name: Build custom Pi 5 kernel
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-kernel.yml'
+
+env:
+  RPI_LINUX_BRANCH: rpi-6.18.y
+  LOCALVERSION: -sata-boot
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev make libc6-dev libncurses5-dev gcc-aarch64-linux-gnu libssl-dev dpkg-dev ccache crossbuild-essential-arm64
+
+      - name: Cache ccache
+        uses: actions/cache@v6
+        with:
+          path: ~/.ccache
+          key: ccache-${{ env.RPI_LINUX_BRANCH }}-${{ hashFiles('kernel-config/**') }}
+          restore-keys: ccache-${{ env.RPI_LINUX_BRANCH }}-
+
+      - name: Clone raspberrypi/linux
+        run: |
+          git clone --depth=1 --branch "${RPI_LINUX_BRANCH}" https://github.com/raspberrypi/linux.git
+
+      - name: Configura kernel
+        working-directory: linux
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2712_defconfig
+          echo "CONFIG_LOCALVERSION=\"${LOCALVERSION}\"" >> .config
+          ./scripts/config --enable CONFIG_ATA
+          ./scripts/config --enable CONFIG_SATA_AHCI
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
+      - name: Build .deb
+        working-directory: linux
+        env:
+          CCACHE_DIR: /home/runner/.ccache
+        run: |
+          make ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j"$(nproc)" Image modules dtbs bindeb-pkg
+
+      - name: Prep apt repo
+        run: |
+          mkdir -p repo/pool
+          mv linux-*.deb repo/pool/
+          cd repo
+          dpkg-scanpackages pool /dev/null > Packages
+          gzip -9c Packages > Packages.gz
+
+      - name: Publish repo
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          publish_branch: apt-repo
+          force_orphan: true
