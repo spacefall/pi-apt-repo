@@ -45,10 +45,9 @@ jobs:
         working-directory: linux
         env:
           CCACHE_DIR: /home/runner/.ccache
-          PATH: "/usr/lib/ccache:${PATH}"
         run: |
-          make LLVM=1 -j"$(nproc)" Image modules dtbs
-          make LLVM=1 -j"$(nproc)" bindeb-pkg
+          PATH="/usr/lib/ccache:${PATH}" make LLVM=1 -j"$(nproc)" Image modules dtbs
+          PATH="/usr/lib/ccache:${PATH}" make LLVM=1 -j"$(nproc)" bindeb-pkg
 
       - name: Prep apt repo
         run: |
