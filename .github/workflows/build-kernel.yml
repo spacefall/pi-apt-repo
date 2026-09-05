@@ -12,14 +12,14 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison flex libssl-dev make libc6-dev libncurses5-dev gcc-aarch64-linux-gnu libssl-dev dpkg-dev ccache crossbuild-essential-arm64  build-essential debhelper-compat libdw-dev libelf-dev
+          sudo apt-get install -y bc bison flex libssl-dev make build-essential debhelper-compat libdw-dev libelf-dev
 
       - name: Cache ccache
         uses: actions/cache@v6
@@ -35,18 +35,18 @@ jobs:
       - name: Configura kernel
         working-directory: linux
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2712_defconfig
+          make bcm2712_defconfig
           echo "CONFIG_LOCALVERSION=\"${LOCALVERSION}\"" >> .config
           ./scripts/config --enable CONFIG_ATA
           ./scripts/config --enable CONFIG_SATA_AHCI
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          make olddefconfig
 
       - name: Build .deb
         working-directory: linux
         env:
           CCACHE_DIR: /home/runner/.ccache
         run: |
-          make ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j"$(nproc)" Image modules dtbs bindeb-pkg
+          make CCACHE=1 -j"$(nproc)" Image modules dtbs bindeb-pkg
 
       - name: Prep apt repo
         run: |
