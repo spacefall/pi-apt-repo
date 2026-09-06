@@ -36,7 +36,7 @@ jobs:
       - name: Configure kernel
         working-directory: linux
         run: |
-          git apply ../kernel-builddeb.patch
+          patch -p 1 < ../kernel-builddeb.patch
           make LLVM=1 bcm2712_defconfig
           ./scripts/config --enable CONFIG_ATA
           ./scripts/config --enable CONFIG_SATA_AHCI
