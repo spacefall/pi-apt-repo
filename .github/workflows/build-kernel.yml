@@ -8,7 +8,7 @@ on:
 
 env:
   RPI_LINUX_BRANCH: rpi-6.18.y
-  LOCALVERSION: -sata-rpi-2712
+  KERNEL_LOCALVERSION: -sata
 
 permissions:
   contents: write
@@ -24,10 +24,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison flex libssl-dev make build-essential debhelper-compat libdw-dev libelf-dev llvm lld clang
       
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.24
         with:
-          key: ${{ github.job }}-${{ matrix.os }}-${{ env.RPI_LINUX_BRANCH }}
+          key: ${{ env.RPI_LINUX_BRANCH }}
 
       - name: Clone raspberrypi/linux
         run: |
@@ -36,17 +36,24 @@ jobs:
       - name: Configure kernel
         working-directory: linux
         run: |
+          git apply ../kernel-builddeb.patch
           make LLVM=1 bcm2712_defconfig
           ./scripts/config --enable CONFIG_ATA
           ./scripts/config --enable CONFIG_SATA_AHCI
+          ./scripts/config --set-str CONFIG_LOCALVERSION ${KERNEL_LOCALVERSION}
           make LLVM=1 olddefconfig
 
-      - name: Build .deb
+      - name: Build kernel
         working-directory: linux
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           PATH="/usr/lib/ccache:${PATH}" make LLVM=1 -j"$(nproc)" Image modules dtbs
-          PATH="/usr/lib/ccache:${PATH}" make LLVM=1 -j"$(nproc)" bindeb-pkg 
+      
+      - name: Package
+        working-directory: linux
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          PATH="/usr/lib/ccache:${PATH}" make LLVM=1 -j"$(nproc)" bindeb-pkg LOCALVERSION="-rpi-2712"
 
       - name: Prep apt repo
         run: |
@@ -63,8 +70,3 @@ jobs:
           publish_dir: ./repo
           publish_branch: apt-repo
           force_orphan: true
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: krnl-build
-          path: linux
