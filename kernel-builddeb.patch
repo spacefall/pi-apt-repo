@@ -1,5 +1,4 @@
 diff --git a/scripts/package/builddeb b/scripts/package/builddeb
-index ba1defc61..be1090cea 100755
 --- a/scripts/package/builddeb
 +++ b/scripts/package/builddeb
 @@ -34,6 +34,7 @@ install_linux_image () {
