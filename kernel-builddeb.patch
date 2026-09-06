@@ -1,13 +1,12 @@
 diff --git a/scripts/package/builddeb b/scripts/package/builddeb
-index ba1defc..cc0efb5 100755
+index ba1defc61..be1090cea 100755
 --- a/scripts/package/builddeb
 +++ b/scripts/package/builddeb
-@@ -34,6 +34,8 @@ install_linux_image () {
-        if is_enabled CONFIG_OF_EARLY_FLATTREE && [ -d "${srctree}/arch/${SRCARCH}/boot/dts" ]; then
-                ${MAKE} -f ${srctree}/Makefile INSTALL_DTBS_PATH="${pdir}/usr/lib/linux-image-${KERNELRELEASE}" dtbs_install
-        fi
-+
-+       cp ${srctree}/arch/${SRCARCH}/boot/dts/overlays/README ${pdir}/usr/lib/linux-image-${KERNELRELEASE}
+@@ -34,6 +34,7 @@ install_linux_image () {
+ 	if is_enabled CONFIG_OF_EARLY_FLATTREE && [ -d "${srctree}/arch/${SRCARCH}/boot/dts" ]; then
+ 		${MAKE} -f ${srctree}/Makefile INSTALL_DTBS_PATH="${pdir}/usr/lib/linux-image-${KERNELRELEASE}" dtbs_install
+ 	fi
++	cp ${srctree}/arch/${SRCARCH}/boot/dts/overlays/README ${pdir}/usr/lib/linux-image-${KERNELRELEASE}
  
-        ${MAKE} -f ${srctree}/Makefile INSTALL_MOD_PATH="${pdir}" INSTALL_MOD_STRIP=1 modules_install
-        rm -f "${pdir}/lib/modules/${KERNELRELEASE}/build"
+ 	${MAKE} -f ${srctree}/Makefile INSTALL_MOD_PATH="${pdir}" INSTALL_MOD_STRIP=1 modules_install
+ 	rm -f "${pdir}/lib/modules/${KERNELRELEASE}/build"
