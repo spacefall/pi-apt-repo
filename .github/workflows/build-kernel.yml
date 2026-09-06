@@ -67,3 +67,8 @@ jobs:
           publish_dir: ./repo
           publish_branch: apt-repo
           force_orphan: true
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: krnl-build
+          path: linux
